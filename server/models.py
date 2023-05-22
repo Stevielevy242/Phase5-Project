@@ -26,6 +26,9 @@ class Investor(db.Model):
         self.password = password
         self.id = id
 
+    def __repr__(self):
+        return f'<Investor id={self.id} name={self.name} username={self.username} password={self.password}>'
+
     def to_dict(self):
         return {
             "id" : self.id, 

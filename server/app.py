@@ -1,3 +1,9 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
+
 from flask import Flask, request
 from flask_migrate import Migrate
 from models import db, Investor, Company, Message
@@ -5,8 +11,12 @@ from models import db, Investor, Company, Message
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///development.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+# print(os.getenv('JWT_SECRET_KEY'))
 migrate = Migrate(app, db)
 db.init_app(app)
+
+jwt = JWTManager(app)
 
 
 #! INVESTOR ROUTES
@@ -37,9 +47,19 @@ def add_investor():
 def login_investors():
     data = request.json
     investor = Investor.query.where(Investor.username == data['username']).first()
+    print(investor)
+    if investor:
+          token = create_access_token(identity=investor.id)
+          return {
+                "investor" : investor.to_dict(),
+                "token" : token
+          }, 201
+    else: 
+          return {"message" : "Invalid username or password"}, 401
+    
     # if investor and bcrypt.check_password_hash(investor.password, data['password']):
     #     session['investor_id'] = investor.id
-    return investor.to_dict(), 201
+    # return investor.to_dict(), 201
     # else:
     #     return {'Message': "Invalid username or password"}, 401
 
